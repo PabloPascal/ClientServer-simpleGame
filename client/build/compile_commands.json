@@ -1,8 +1,0 @@
-[
-{
-  "directory": "/home/pablo/Desktop/Projects/ClientServerGame/client/build",
-  "command": "/usr/bin/g++   -g -o CMakeFiles/Client.dir/client.cpp.o -c /home/pablo/Desktop/Projects/ClientServerGame/client/client.cpp",
-  "file": "/home/pablo/Desktop/Projects/ClientServerGame/client/client.cpp",
-  "output": "CMakeFiles/Client.dir/client.cpp.o"
-}
-]
