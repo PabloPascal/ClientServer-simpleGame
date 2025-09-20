@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/pablo/Desktop/Projects/ClientServerGame/server/build",
+  "command": "/usr/bin/g++   -g -o CMakeFiles/Server.dir/server.cpp.o -c /home/pablo/Desktop/Projects/ClientServerGame/server/server.cpp",
+  "file": "/home/pablo/Desktop/Projects/ClientServerGame/server/server.cpp",
+  "output": "CMakeFiles/Server.dir/server.cpp.o"
+}
+]
