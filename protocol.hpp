@@ -14,7 +14,8 @@ enum class MessageType : uint8_t
     player_action,
     player_state,
     projectile_state,
-    text
+    text,
+    disconnect
 };
 
 

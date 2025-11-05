@@ -25,8 +25,14 @@ void Client::run()
         {
             if(event.type == sf::Event::Closed)
             {
-                m_window.close();
+                sf::Packet newPacket;
+                newPacket << (uint8_t)MessageType::disconnect;
+                newPacket << mId;
+                mSocket.send(newPacket, mAddressIP, mPort);
+                
                 connected = false;
+                m_window.close();
+                
             }
         }
 

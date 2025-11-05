@@ -60,6 +60,11 @@ void Server::run()
                 handleProjectileState(packet, sender_ip_address, sender_port);
                 break;
             }
+            case MessageType::disconnect:
+            {
+                handleDisconnect(packet, sender_ip_address, sender_port);
+                break;
+            }
             default:
                 break;
             }
@@ -255,4 +260,17 @@ void Server::projectileCollision(ProjectileState& bullet)
     }
 
 
+}
+
+
+void Server::handleDisconnect(sf::Packet& packet, sf::IpAddress senderIp, unsigned short sender_port)
+{
+    ID player_id;
+    packet >> player_id;
+
+    mPlayers.erase(player_id);
+
+    std::cout << "player id: " << player_id << " disconnected from server!" << std::endl;
+    std::cout << "port: " << sender_port << ", IP: " << senderIp << std::endl;
+    std::cout << "players count: " << mPlayers.size() << std::endl;
 }

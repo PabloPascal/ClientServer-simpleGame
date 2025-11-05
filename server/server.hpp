@@ -28,6 +28,7 @@ private:
     void proccessInput(PlayerState& action);
     void handlePlayerState(sf::Packet& packet, sf::IpAddress senderIp, unsigned short sender_port);
     void handleProjectileState(sf::Packet& packet, sf::IpAddress senderIp, unsigned short sender_port);
+    void handleDisconnect(sf::Packet& packet, sf::IpAddress senderIp, unsigned short sender_port);
     void sendToAll(sf::Packet& packet);
     ProjectileState createProjectile(PlayerState& player_state);
     void projectileUpdate(float deltaTime);
