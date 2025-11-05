@@ -1,0 +1,20 @@
+[
+{
+  "directory": "/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/build",
+  "command": "/usr/bin/g++  -I/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/src -g -o CMakeFiles/shooter2D.dir/main.cpp.o -c /home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/main.cpp",
+  "file": "/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/main.cpp",
+  "output": "CMakeFiles/shooter2D.dir/main.cpp.o"
+},
+{
+  "directory": "/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/build",
+  "command": "/usr/bin/g++  -I/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/src -g -o CMakeFiles/shooter2D.dir/src/client.cpp.o -c /home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/src/client.cpp",
+  "file": "/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/src/client.cpp",
+  "output": "CMakeFiles/shooter2D.dir/src/client.cpp.o"
+},
+{
+  "directory": "/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/build",
+  "command": "/usr/bin/g++  -I/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/src -g -o CMakeFiles/shooter2D.dir/home/pablopascal/Desktop/Projects/OnlineShooter2D/protocol.cpp.o -c /home/pablopascal/Desktop/Projects/OnlineShooter2D/protocol.cpp",
+  "file": "/home/pablopascal/Desktop/Projects/OnlineShooter2D/protocol.cpp",
+  "output": "CMakeFiles/shooter2D.dir/home/pablopascal/Desktop/Projects/OnlineShooter2D/protocol.cpp.o"
+}
+]

@@ -1,93 +1,256 @@
-#include <SFML/Network.hpp>
-#include <SFML/Graphics.hpp>
-#include <chrono>
-#include <iostream>
-#include <map>
-
-
-struct Player{
-
-    int health;
-    float radius;
-    sf::Vector2f pos;
-    sf::Color color;
-    std::chrono::steady_clock::time_point lastUpdate;
-
-    unsigned int id;
-
-};
+#include "server.hpp"
 
 
 
-
-int main(){
-
-
-    unsigned int port = 5341;
-    
-    sf::UdpSocket socket;
-
-    if(socket.bind(port) != sf::Socket::Done){
-        std::cerr << "cannot bind this port: " << port << std::endl;
-        return -1;
+void Server::run()
+{
+    if(socket.bind(m_port) != sf::Socket::Status::Done)
+    {
+        std::cerr << "cannot bind to port: " << m_port << std::endl;
+        throw "bind error\n";
     }
-    std::cout << "server waiting clients\n";
 
-    std::map<unsigned int, std::pair<sf::IpAddress, unsigned int>> clients; //храним адреса клиентов 
-    std::map<unsigned int, Player> players;
+    server_run = true;
+    
+    std::cout << "server is running\n";
+    sf::Clock timer;
+    sf::Time time;
 
+    const float FIXED_TIMESTEP = 1/60.f; 
+    float accumulate_time = 0.f;
 
     socket.setBlocking(false);
-    while(true){
+    while(server_run)
+    {
+
+        accumulate_time += timer.restart().asSeconds();
+
+
+        while(accumulate_time >= FIXED_TIMESTEP)
+        {
+            deltaTime = FIXED_TIMESTEP;
+            accumulate_time -= FIXED_TIMESTEP;
+        }
 
         sf::Packet packet;
         sf::IpAddress sender_ip_address;
         unsigned short sender_port;
+
         sf::Socket::Status status = socket.receive(packet, sender_ip_address, sender_port);
 
-        if(status == sf::Socket::Done){
+        if(status == sf::Socket::Done)
+        {
 
-            Player player_data;
+            uint8_t type;
+            packet >> type;
 
-            packet >> player_data.health >> player_data.radius >> player_data.pos.x >> player_data.pos.y 
-            >> player_data.color.r >> player_data.color.g >> player_data.color.b >> player_data.id;
+            MessageType msg_type = static_cast<MessageType>(type);
 
-            player_data.lastUpdate = std::chrono::steady_clock::now();
+            //std::cout << "type = " << type << std::endl;
 
-            players[player_data.id] = player_data;
-            clients[player_data.id] = std::make_pair(sender_ip_address, sender_port);
-
-            for(const auto [id, addr] : clients){
-
-                sf::Packet response;
-                response << player_data.health << player_data.radius << player_data.pos.x << player_data.pos.y 
-            << player_data.color.r << player_data.color.g << player_data.color.b << player_data.id;
-
-
-                if(socket.send(response, addr.first, addr.second) != sf::Socket::Done){
-                    std::cerr << "didnt send packet to address: ip_address: " << addr.first
-                              << ", port: "<< addr.second << std::endl; 
-                }
+            switch (msg_type)
+            {
+            case MessageType::player_state:
+            {
+                handlePlayerState(packet, sender_ip_address, sender_port);
+                break;
+            }
+            case MessageType::projectile_state :
+            {
+                handleProjectileState(packet, sender_ip_address, sender_port);
+                break;
+            }
+            default:
+                break;
             }
 
 
-        }else if(status == sf::Socket::Error){
-            std::cerr <<  "receive socket error\n";
         }
-        auto now = std::chrono::steady_clock::now();
-        for(auto it = players.begin(); it != players.end();){
 
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - it->second.lastUpdate).count();
+        projectileUpdate(deltaTime);
 
-            if(duration > 5){
-                clients.erase(it->first);
-                it = players.erase(it);
+
+    }
+
+
+
+}
+
+
+void Server::handlePlayerState(sf::Packet& packet, sf::IpAddress senderIp, unsigned short sender_port)
+{
+    PlayerState state;
+    packet >> state;
+
+    auto it = mClients.find(state.id);
+    
+    if(it == mClients.end())
+    {
+        std::cout << "player: " << state.name << " connected!\n"; 
+        std::cout << "id = " << state.id << std::endl;
+        std::cout << "IP: " << senderIp << std::endl;
+        std::cout << "port: " << sender_port << std::endl;
+
+        std::string welcome = "welcome to the server!\n";
+        sf::Packet packet;
+        
+        uint8_t type = (uint8_t)MessageType::text;
+        packet << type;
+        packet << welcome;
+
+        socket.send(packet, senderIp, sender_port);
+
+        mClients.insert(std::make_pair(state.id, std::pair(senderIp, sender_port)));
+    }
+    else{
+        proccessInput(state);
+        mPlayers[state.id] = state;
+        
+        sf::Packet new_packet;
+        new_packet << state;
+        sendToAll(new_packet);
+    }
+    
+    
+
+}
+
+
+
+void Server::handleProjectileState(sf::Packet& packet, sf::IpAddress senderIp, unsigned short sender_port)
+{
+    
+}
+
+
+
+void Server::sendToAll(sf::Packet& packet)
+{
+
+    for(const auto [id, addr] : mClients)
+    {
+        if(socket.send(packet, addr.first, addr.second) != sf::Socket::Done)
+        {
+            std::cerr << "error sent data: ip = " << addr.first << std::endl;
+        }
+
+    }
+
+}
+
+
+void Server::proccessInput(PlayerState& state)
+{
+    PlayerAction act = state.action;
+
+    if((act & PlayerAction::moveUp) == PlayerAction::moveUp)
+    {
+        state.positionY -= state.speed * deltaTime;
+    }
+    if((act & PlayerAction::moveDown) == PlayerAction::moveDown)
+    {
+        state.positionY += state.speed * deltaTime;
+    }
+    if((act & PlayerAction::moveRight) == PlayerAction::moveRight)
+    {
+        state.positionX += state.speed * deltaTime;
+
+    }
+    if((act & PlayerAction::moveLeft) == PlayerAction::moveLeft)
+    {
+        state.positionX -= state.speed * deltaTime;
+
+    }
+    if((act & PlayerAction::shoot) == PlayerAction::shoot)
+    {
+        ProjectileState bullet;
+        if(couldown.getElapsedTime().asMilliseconds() > 500){
+            bullet = createProjectile(state);
+            mProjectiles.emplace_back(bullet);
+            couldown.restart();
+        }
+        sf::Packet new_packet;
+        new_packet << bullet;
+        sendToAll(new_packet);
+    }
+
+}
+
+
+ProjectileState Server::createProjectile(PlayerState& player_state)
+{
+    ProjectileState projectile;
+    if(player_state.ammoCount > 0)
+    {
+        player_state.ammoCount--;
+
+        projectile.id = projectile_id++;
+        projectile.owner_id = player_state.id;
+        projectile.live = true;
+        projectile.positionX = player_state.positionX;
+        projectile.positionY = player_state.positionY;
+        projectile.velocityX *= player_state.dirX;
+        projectile.velocityY *= player_state.dirY;
+
+        projectile.lastTimeUpdate = player_state.lastTimeUpdate;
+
+    }
+
+    return projectile;
+}
+
+
+void Server::projectileUpdate(float deltaTime)
+{
+
+    for(auto it = mProjectiles.begin(); it != mProjectiles.end(); ++it)
+    {
+
+        if(it->live)
+        {
+
+            float dt = it->lastTimeUpdate;
+            it->positionX += it->velocityX;
+            it->positionY += it->velocityY;
+
+            projectileCollision(*it);
+
+            sf::Packet new_packet;
+            new_packet << *it;
+
+            sendToAll(new_packet);
+
+
+            if(it->positionX > 2000 || it->positionX < -100 || it->positionY > 1000 || it->positionY < -100)
+            {
+                it->live = false;
             }
-            else
-                ++it;
         }
+    }
 
 
+
+}
+
+
+
+void Server::projectileCollision(ProjectileState& bullet)
+{
+
+    for(auto& [id, player]: mPlayers)
+    {
+        float diffX = player.positionX - bullet.positionX;
+        float diffY = player.positionY - bullet.positionY;
+        
+        if(diffX*diffX + diffY*diffY < 40*40 && bullet.owner_id != id) 
+        {
+            player.health -= 5;
+            bullet.live = false;
+            sf::Packet packet;
+            packet << player;
+            sendToAll(packet);
+        }
+        
 
     }
 
