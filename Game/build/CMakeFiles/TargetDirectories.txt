@@ -1,3 +1,0 @@
-/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/build/CMakeFiles/shooter2D.dir
-/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/build/CMakeFiles/edit_cache.dir
-/home/pablopascal/Desktop/Projects/OnlineShooter2D/Game/build/CMakeFiles/rebuild_cache.dir
